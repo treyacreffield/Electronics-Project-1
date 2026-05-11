@@ -1,14 +1,12 @@
 MODIFICATIONS FROM PREVIOUS VERSION:
 
-Game now works as a simple state machine
-It uses a state variable to store what 'mode' the program is in.
-States are:
-0 - Menu
-1 - Memory Game
-2 - Math Game
-3 - Game Over
-
-Game flow is now:
-Menu Screen -> Press button 1/2 to select game -> Memory or Math game -> Game returns score -> Game Over Screen -> returns to Menu Screen
-
-Math game logic not written yet, but code is prepped to include it.
+Math Game Logic is now written:
+- 2 numbers are randomly generated
+- also used random number generation to randomly choose an operator (only uses + or - for now)
+- correct answer is generated using the 2 numbers and operator
+    when - is chosen, extra logic is implemented so that answer is always positive
+- 4 incorrect answers are generated and assigned to each button
+- correct answer is then randomly assigned to one of the four buttons
+- user input is then read
+- if user chooses correctly then score is increase by 1 /
+if user chooses incorrectly then a life is lost
