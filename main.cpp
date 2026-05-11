@@ -20,8 +20,13 @@ DigitalOut led2(PA_5);
 DigitalOut led3(PC_5);
 DigitalOut led4(PC_4);
 
-//LCD FUNCTIONS
+//GAME STATES
+const int MENU = 0;
+const int MEMORY_GAME = 1;
+const int MATH_GAME = 2;
+const int GAME_OVER = 3;
 
+//LCD FUNCTIONS
 //Sends enable pulse
 void lcdPulse()
 {
@@ -82,6 +87,7 @@ void lcdLocate(int column, int row) //moves cursor to a specific location
     }
 }
 
+//Prints characters
 void lcdPrint(const char* text) //pointer to string
 {
     while(*text) //keeps looping until the null terminator (\0) - end of string
@@ -89,6 +95,12 @@ void lcdPrint(const char* text) //pointer to string
         lcdData(*text); //sends current character to LCD
         text++; //moves pointer to the next character in memory
     }
+}
+
+//Prints single digit numbers
+void lcdPrintNumber(int number)
+{
+    lcdData(number + '0');
 }
 
 //LCD setup - used Rohans guide to this
@@ -101,7 +113,8 @@ void lcdInit()
     //send "Display Settings" 3 times (Only top nibble of 0x30 as we've got 4-bit bus)
     for (int i=0; i<3; i++) {
         lcdWrite4(0x3);
-        thread_sleep_for(2);  //this command takes 1.64ms, so thread_sleep_for for it
+        thread_sleep_for(2); //this command takes 1.64ms, so thread_sleep_for for it
+        }  
     //4-bit mode
     lcdWrite4(0x02); 
 
@@ -226,28 +239,12 @@ void showLives(int lives)
     }
 }
 
-//MAIN PROGRAM
-
-int main()
-{
-    lcdInit();
-
-    lcdCreateCharacter();
-
+//MEMORY GAME
+int playMemoryGame(){
+    
     int sequence[10];
-
     int lives = 3;
-
     int round = 1;
-
-    //Startup screen
-    lcdLocate(0,0);
-    lcdPrint("Memory Game");
-
-    lcdLocate(0,1);
-    lcdPrint("Press button");
-
-    readButton();
 
     while(lives > 0)
     {
@@ -305,13 +302,13 @@ int main()
 
             thread_sleep_for(1000);
 
-            round++;
+            round++; //if player answers correctly, next round becomes harder
         }
 
         //Wrong answer
         else
         {
-            lives--;
+            lives--; //if player scores incorrectly they will lose a 'life'
 
             lcdClear();
 
@@ -323,20 +320,68 @@ int main()
             thread_sleep_for(1000);
         }
     }
+    return round - 1;
+}
 
-    //End screen
-    lcdClear();
+//MAIN PROGRAM
 
-    lcdLocate(0,0);
-    lcdPrint("Game Over");
+int main(){
+    //Initialise LCD Screen and Custom Characters
+    lcdInit();
+    lcdCreateCharacter();
+    int state = MENU;
+    int finalScore = 0; //stores score of last played game to be displayed on game over screen, both games return a 'final score'
 
-    lcdLocate(0,1);
-    lcdPrint("Score:");
-
-    lcdData(round - 1 + '0');
-
+    //Works as a simple state machine
     while(true)
     {
+        if(state == MENU) //in MENU state user has options to select either memory or math game with button inputs
+        {
+            lcdClear();
+            lcdLocate(0,0);
+            lcdPrint("1:Memory 2:Math");
 
+            lcdLocate(0,1);
+            lcdPrint("Choose game");
+
+            int choice = readButton(); 
+
+            if(choice == 0) //if button 0 is pressed state will change to memory game
+            {
+                state = MEMORY_GAME; 
+            }
+            else if(choice == 1) //if button 1 is pressed state will change to math game
+            {
+                state = MATH_GAME;
+            }
+        }
+
+        else if(state == MEMORY_GAME)
+        {
+            finalScore = playMemoryGame();
+            state = GAME_OVER;
+        }
+
+        else if(state == MATH_GAME)
+        {
+            finalScore = playMathGame();
+            state = GAME_OVER;
+        }
+
+        else if(state == GAME_OVER) //in state GAMEOVER: game over will be printed on screen followed by the final score
+        {
+            lcdClear();
+
+            lcdLocate(0,0);
+            lcdPrint("Game Over");
+
+            lcdLocate(0,1);
+            lcdPrint("Score:");
+            lcdPrintNumber(finalScore);
+
+            thread_sleep_for(3000);
+
+            state = MENU; //game will then return to the menu screen
+        }
     }
 }
