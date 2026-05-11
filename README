@@ -1,8 +1,14 @@
-Sequential game flow:
-1. Simple start up screen 'Memory Game'
-2. User presses any button to start
-3. LEDs flash in random sequence, user is promted to watch
-4. User then inputs memorised sequence, corresponding LEDs light up as user does this
-5. If user gets sequence correct then next round becomes harder (longer sequence), and user scores a point /
-If user gets sequence incorrect they lose a 'life' and next round remains at the same difficulty level
-6. When user loses all lives or completes all rounds, game ends and a simple End Screen is displayed with overall score
+MODIFICATIONS FROM PREVIOUS VERSION:
+
+Game now works as a simple state machine
+It uses a state variable to store what 'mode' the program is in.
+States are:
+0 - Menu
+1 - Memory Game
+2 - Math Game
+3 - Game Over
+
+Game flow is now:
+Menu Screen -> Press button 1/2 to select game -> Memory or Math game -> Game returns score -> Game Over Screen -> returns to Menu Screen
+
+Math game logic not written yet, but code is prepped to include it.
