@@ -97,10 +97,17 @@ void lcdPrint(const char* text) //pointer to string
     }
 }
 
-//Prints single digit numbers
+//Prints numbers < 100
 void lcdPrintNumber(int number)
 {
-    lcdData(number + '0');
+    //For numbers bigger than 9
+    if(number >= 10)
+    {
+        lcdData((number / 10) + '0');
+    }
+
+    //Last digit
+    lcdData((number % 10) + '0');
 }
 
 //LCD setup - used Rohans guide to this
@@ -323,8 +330,84 @@ int playMemoryGame(){
     return round - 1;
 }
 
-//MAIN PROGRAM
+//MATH GAME
+int playMathGame(){
+    int lives = 3;
+    int score = 0;
+    while (lives > 0){
+        //for each game round randomly generate 2 numbers and an operator
+        //researched how to randomly generate numbers
+        int num1 = rand() % 10; //random number between 0 and 9
+        int num2 = rand() % 10; //random number between 0 and 9
+        int operation = rand() % 2; //chooses randomly between 2 operators (+ or -) by randomly generating a number between 0 and 1
+        int correctAnswer;
+        char operationSymbol;
+        if (operation == 0){
+            correctAnswer = num1 + num2;
+            operationSymbol = '+';
+        }
+        else if (operation == 1){
+            if (num2 > num1){ //added this in to prevent negative answers
+                int temp = num1;
+                num1 = num2;
+                num2 = temp;
+            }
+            correctAnswer = num1 - num2;
+            operationSymbol = '-';
+        }
+        int correctButton = rand() % 4; //chooses randomly from 4 buttons to assign correct answer
+        //generates wrong answers
+        int options[4];
+        options[0] = correctAnswer + 1;
+        options[1] = correctAnswer + 2;
+        options[2] = correctAnswer + 3;
+        options[3] = correctAnswer + 4;
+        options[correctButton] = correctAnswer;
 
+        //prints question top/middle of screen
+        lcdClear();
+        lcdLocate(4,0);
+        lcdPrintNumber(num1);
+        lcdData(operationSymbol);
+        lcdPrintNumber(num2);
+        lcdData('=');
+
+        //prints answers in each of the 4 corners of the screen, next to each button
+        lcdLocate(0,0);
+        lcdPrintNumber(options[0]);
+
+        lcdLocate(13,0);
+        lcdPrintNumber(options[1]);
+
+        lcdLocate(0,1);
+        lcdPrintNumber(options[2]);
+
+        lcdLocate(13,1);
+        lcdPrintNumber(options[3]);
+
+        //reads user answer
+        int userChoice = readButton();
+
+        //checks answer
+        if (userChoice == correctButton){
+            lcdClear();
+            lcdLocate(0,0);
+            lcdPrint("Correct!");
+            score++; //if correct score is increased by 1
+        }
+        else{
+            lives--;
+            lcdClear();
+            lcdLocate(0,0);
+            lcdPrint("Incorrect!");
+            showLives(lives); //if incorrect one life is lost
+        }
+        thread_sleep_for(1000);
+    }
+    return score;
+}
+
+//MAIN PROGRAM
 int main(){
     //Initialise LCD Screen and Custom Characters
     lcdInit();
@@ -339,7 +422,7 @@ int main(){
         {
             lcdClear();
             lcdLocate(0,0);
-            lcdPrint("1:Memory 2:Math");
+            lcdPrint("1:Memory 2:Math"); //need to change to button colours
 
             lcdLocate(0,1);
             lcdPrint("Choose game");
